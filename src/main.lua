@@ -7,15 +7,23 @@ require "card"
 require "grabber"
 
 -- ---------------------------------------------------------------------------
---  Global-ish game table (keeps things out of the true global namespace)
+--  Singleton game tables
 -- ---------------------------------------------------------------------------
 local game = {
   grabber = nil,   -- will hold a GrabberClass instance
   cards   = {}     -- array of CardClass instances
 }
 
+game.snapPoints = {
+  Vector(200, 200),
+  Vector(300, 200),
+  Vector(400, 200),
+  Vector(500, 200),
+}
+
+
 -- ---------------------------------------------------------------------------
---  LOVE callbacks
+--  LOVE
 -- ---------------------------------------------------------------------------
 function love.load()
   love.window.setMode(960, 640)
@@ -27,25 +35,21 @@ function love.load()
   table.insert(game.cards, CardClass:new(100, 100))
 end
 
--- small helper so update() stays tidy
-local function checkForMouseOver()
-  if not game.grabber.currentMousePos then
-    return
-  end
-  for _, card in ipairs(game.cards) do
-    card:checkForMouseOver(game.grabber)
-  end
-end
-
 function love.update(dt)
+  -- move the grabber first (updates mouse pos)
   game.grabber:update(dt)
 
+  -- cursor data for hover tests
+  local mx, my   = game.grabber.currentMousePos.x, game.grabber.currentMousePos.y
+  local dragging = (game.grabber.heldObject ~= nil)
+
+  -- update each card, then refresh its visual state
   for _, card in ipairs(game.cards) do
     card:update(dt)
+    card:updateHoverState(mx, my, dragging)
   end
-
-  checkForMouseOver()
 end
+
 
 function love.draw()
   for _, card in ipairs(game.cards) do
@@ -66,6 +70,6 @@ end
 
 function love.mousereleased(x, y, button)
   if button == 1 then
-    game.grabber:endDrag(x, y)
+    game.grabber:endDrag(x, y, game.cards)   -- pass card list so grabber can re-order
   end
 end

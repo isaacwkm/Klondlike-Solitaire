@@ -1,0 +1,49 @@
+main.lua is responsible for:
+
+- Creating the window and setting background
+
+- Instantiating the grabber and an array of cards
+
+- Handling game updates
+
+- Handling input
+
+- Managing hover detection
+
+
+---
+
+How encapsulated are the parts of the code?
+
+
+- CardClass handles its drawing, hover checking, and simple states, so it sticks to its name
+
+- GrabberClass handles mouse movement and dragging logic, only the grabbing tasks.
+
+Overall, the code is pretty encapsulated to performing tasks true to their class' name.
+
+
+---
+
+Is the code easy to follow?
+
+- Yes
+
+- Each class has a equal-ish length and not tooo long
+
+
+----
+
+How could you improve any of these issues?
+
+ - Maybe have less code in main.lua, doing a bit of everything in gamelogic
+
+---
+
+What patterns are being used, and what could I use?
+
+- Factory – every :new() function builds and returns a new object
+
+- State – CARD_STATE keeps track of visual/interactive states
+
+- Singleton – the game table in main.lua acts like a pseudo-singleton for now.

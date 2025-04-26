@@ -46,16 +46,24 @@ end
 ------------------------------------------------------------------------
 --  Called from love.mousereleased in main.lua
 ------------------------------------------------------------------------
-function GrabberClass:endDrag(x, y)
+-- grabber.lua  (add to endDrag)
+function GrabberClass:endDrag(x, y, cards)
   if not self.heldObject then return end
 
-  ------------------------------------------------------------
-  -- TODO: validate the release position here.
-  -- For now we always accept the move:
-  ------------------------------------------------------------
-  self.heldObject.state = 0           -- back to idle / face-up, etc.
+  -- 1) snap Z-order: move grabbed card to end of draw list
+  for i = #cards, 1, -1 do
+    if cards[i] == self.heldObject then
+      table.remove(cards, i)
+      break
+    end
+  end
+  table.insert(cards, self.heldObject)   -- now it draws on top
+
+  -- 2) finalise state
+  self.heldObject.state = CARD_STATE.IDLE
   self.heldObject       = nil
 end
+
 
 ------------------------------------------------------------------------
 --  Utility: find the topmost card under the cursor
