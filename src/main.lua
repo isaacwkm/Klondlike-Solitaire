@@ -10,8 +10,8 @@ require "grabber"
 --  Singleton game tables
 -- ---------------------------------------------------------------------------
 local game = {
-  grabber = nil,   -- will hold a GrabberClass instance
-  cards   = {}     -- array of CardClass instances
+  grabber = nil, -- will hold a GrabberClass instance
+  cards   = {}   -- array of CardClass instances
 }
 
 game.snapPoints = {
@@ -21,9 +21,8 @@ game.snapPoints = {
   Vector(500, 200),
 }
 
-
 -- ---------------------------------------------------------------------------
---  LOVE
+--  LOVE methods
 -- ---------------------------------------------------------------------------
 function love.load()
   love.window.setMode(960, 640)
@@ -50,8 +49,16 @@ function love.update(dt)
   end
 end
 
-
 function love.draw()
+  -- draw snap points
+  love.graphics.setColor(1, 0, 0, 0.5)
+
+  for _, point in ipairs(game.snapPoints) do
+    love.graphics.circle("fill", point.x, point.y, 8)
+  end
+  love.graphics.setColor(1, 1, 1, 1) -- reset color
+
+
   for _, card in ipairs(game.cards) do
     card:draw()
   end
@@ -70,6 +77,6 @@ end
 
 function love.mousereleased(x, y, button)
   if button == 1 then
-    game.grabber:endDrag(x, y, game.cards)   -- pass card list so grabber can re-order
+    game.grabber:endDrag(x, y, game.cards, game.snapPoints)
   end
 end

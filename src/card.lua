@@ -55,7 +55,7 @@ function CardClass:draw()
 end
 
 ------------------------------------------------------------
---  Simple AABB hit-test used by GrabberClass
+--  AABB test
 ------------------------------------------------------------
 function CardClass:containsPoint(px, py)
   return
@@ -66,7 +66,7 @@ function CardClass:containsPoint(px, py)
 end
 
 ------------------------------------------------------------
---  Called each frame from main.lua after Grabber updates
+--  Called each frame from main.lua 
 ------------------------------------------------------------
 function CardClass:updateHoverState(mouseX, mouseY, isDragging)
   if self.state == CARD_STATE.GRABBED then return end
