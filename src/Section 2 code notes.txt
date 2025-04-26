@@ -47,3 +47,7 @@ What patterns are being used, and what could I use?
 - State – CARD_STATE keeps track of visual/interactive states
 
 - Singleton – the game table in main.lua acts like a pseudo-singleton for now.
+
+A pattern I could add is: 
+
+The Observer pattern, so events like "card grabbed" can trigger instead of calling other class methods directly from main and grabber.
