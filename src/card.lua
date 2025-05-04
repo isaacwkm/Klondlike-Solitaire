@@ -9,14 +9,19 @@ CARD_STATE = {
   GRABBED     = 2
 }
 
-function CardClass:new(xPos, yPos)
+function CardClass:new(xPos, yPos, suit, rank)
   local card = {
     position = Vector(xPos, yPos),
     size     = Vector(50, 70),
-    state    = CARD_STATE.IDLE
+    state    = CARD_STATE.IDLE,
+    suit     = suit,
+    rank     = rank,
+    faceUp   = true,
+    currentPile = nil
   }
   return setmetatable(card, { __index = CardClass })
 end
+
 
 ------------------------------------------------------------
 --  Per-frame update (placeholder for flips / animations)
@@ -27,43 +32,54 @@ function CardClass:update(dt) end
 --  Rendering
 ------------------------------------------------------------
 function CardClass:draw()
-  -- drop shadow if hovered or grabbed
-  if self.state ~= CARD_STATE.IDLE then
-    love.graphics.setColor(0, 0, 0, 0.6)
-    local offset = (self.state == CARD_STATE.GRABBED) and 8 or 4
-    love.graphics.rectangle("fill",
-      self.position.x + offset,
-      self.position.y + offset,
-      self.size.x,
-      self.size.y,
-      6, 6)
+  local key = self.suit .. "_" .. self.rank
+  local img = game.cardSprites[key]
+
+  if not self.faceUp then
+    img = game.cardBack
   end
 
-  love.graphics.setColor(1, 1, 1, 1)
-  love.graphics.rectangle("fill",
-    self.position.x,
-    self.position.y,
-    self.size.x,
-    self.size.y,
-    6, 6)
+  if img then
+    love.graphics.setColor(1, 1, 1, 1)
 
-  -- debug: show state
-  love.graphics.setColor(0, 0, 0, 1)
-  love.graphics.print(self.state,
-    self.position.x + 12,
-    self.position.y + 26)
+    -- Calculate scale factors
+    local desiredWidth = 80
+    local desiredHeight = 120
+
+    local actualWidth = img:getWidth()
+    local actualHeight = img:getHeight()
+
+    local scaleX = desiredWidth / actualWidth
+    local scaleY = desiredHeight / actualHeight
+
+    -- Draw scaled
+    love.graphics.draw(img, self.position.x, self.position.y, 0, scaleX, scaleY)
+  else
+
+    -- fallback
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", self.position.x, self.position.y, self.size.x, self.size.y)
+  end
 end
 
 ------------------------------------------------------------
 --  AABB test
 ------------------------------------------------------------
 function CardClass:containsPoint(px, py)
+  local img = game.cardSprites[self.suit .. "_" .. self.rank] or game.cardBack
+  local scaleX = 80 / img:getWidth()
+  local scaleY = 120 / img:getHeight()
+
+  local width = img:getWidth() * scaleX
+  local height = img:getHeight() * scaleY
+
   return
     px > self.position.x and
-    px < self.position.x + self.size.x and
+    px < self.position.x + width and
     py > self.position.y and
-    py < self.position.y + self.size.y
+    py < self.position.y + height
 end
+
 
 ------------------------------------------------------------
 --  Called each frame from main.lua 

@@ -32,49 +32,45 @@ end
 ------------------------------------------------------------------------
 --  Calls from love.mousepressed in main.lua
 ------------------------------------------------------------------------
-function GrabberClass:beginDrag(x, y, cards)
-  if self.heldObject then return end  -- already dragging
+function GrabberClass:beginDrag(x, y, piles)
+  if self.heldObject then return end
 
-  local card = self:findTopCardAt(x, y, cards)
-  if not card then return end         -- clicked empty space
-
-  self.heldObject = card
-  card.state      = 1                 -- “grabbed” (define states however you like)
-  self.grabOffset = Vector(x, y) - card.position
+  -- search each pile for a card
+  for _, pile in ipairs(piles) do
+    local card = pile:findTopCardAt(x, y)
+    if card then
+      self.heldObject = card
+      card.state = CARD_STATE.GRABBED
+      self.grabOffset = Vector(x, y) - card.position
+      break
+    end
+  end
 end
+
 
 ------------------------------------------------------------------------
 --  Calls from love.mousereleased in main.lua
 ------------------------------------------------------------------------
 
-function GrabberClass:endDrag(x, y, cards, snapPoints)
+function GrabberClass:endDrag(x, y, piles)
   if not self.heldObject then return end
 
-  -- Find nearest snap point
-  local closest = nil
+  -- Find nearest pile
+  local closestPile = nil
   local closestDist = math.huge
 
-  for _, point in ipairs(snapPoints) do
-    local dist = math.sqrt((point.x - x)^2 + (point.y - y)^2)
+  for _, pile in ipairs(piles) do
+    local dist = math.sqrt((pile.position.x - x)^2 + (pile.position.y - y)^2)
     if dist < closestDist then
       closestDist = dist
-      closest = point
+      closestPile = pile
     end
   end
 
-  -- Move card to snap point
-  if closest then
-    self.heldObject.position = Vector(closest.x, closest.y)
+  -- Snap into the closest pile
+  if closestPile then
+    closestPile:addCard(self.heldObject)
   end
-
-  -- Move grabbed card to end of list for layering
-  for i = #cards, 1, -1 do
-    if cards[i] == self.heldObject then
-      table.remove(cards, i)
-      break
-    end
-  end
-  table.insert(cards, self.heldObject)
 
   self.heldObject.state = CARD_STATE.IDLE
   self.heldObject = nil
