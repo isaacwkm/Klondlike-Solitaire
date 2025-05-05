@@ -18,10 +18,33 @@ end
 ------------------------------------------------------------
 function PileClass:addCard(card)
   table.insert(self.cards, card)
+  card.currentPile = self
 
   -- Update card's position relative to the pile
   local yOffset = (#self.cards - 1) * 20 -- 20 pixels vertical spacing
   card.position = self.position + Vector(0, yOffset)
+end
+
+------------------------------------------------------------
+-- Remove a card from the pile
+------------------------------------------------------------
+function PileClass:removeCard(card)
+  for i = #self.cards, 1, -1 do
+    if self.cards[i] == card then
+      table.remove(self.cards, i)
+      return
+    end
+  end
+end
+
+------------------------------------------------------------
+-- Flip top card
+------------------------------------------------------------
+function PileClass:flipTopCard()
+  local top = self.cards[#self.cards]
+  if top and not top.faceUp then
+    top.faceUp = true
+  end
 end
 
 ------------------------------------------------------------

@@ -55,6 +55,8 @@ end
 function GrabberClass:endDrag(x, y, piles)
   if not self.heldObject then return end
 
+  local card = self.heldObject
+
   -- Find nearest pile
   local closestPile = nil
   local closestDist = math.huge
@@ -67,14 +69,29 @@ function GrabberClass:endDrag(x, y, piles)
     end
   end
 
-  -- Snap into the closest pile
+  -- Move card to closest pile
   if closestPile then
-    closestPile:addCard(self.heldObject)
+    -- Remove from old pile
+    if card.currentPile then
+      card.currentPile:removeCard(card)
+      card.currentPile:flipTopCard()
+    end
+
+    -- Add to new pile
+    closestPile:addCard(card)
+
+    -- Snap to new pile's visual stack position
+    card.position = Vector(
+      closestPile.position.x,
+      closestPile.position.y + (#closestPile.cards - 1) * 20
+    )
   end
 
-  self.heldObject.state = CARD_STATE.IDLE
+  card.state = CARD_STATE.IDLE
   self.heldObject = nil
+  self.grabPos = nil
 end
+
 
 ------------------------------------------------------------------------
 --  Finds the topmost card under the cursor
