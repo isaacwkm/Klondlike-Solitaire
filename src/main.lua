@@ -35,8 +35,15 @@ local ranks = { "02", "03", "04", "05", "06", "07", "08", "09", "10", "jack", "q
 local function drawStockPile()
   if not game.deck then return end
 
-  local x = game.stockPilePosition.x
-  local y = game.stockPilePosition.y
+  -- Find the deck pile
+  local x, y = 100, 100
+  for _, pile in ipairs(game.piles) do
+    if pile.type == "deck" then
+      x = pile.position.x
+      y = pile.position.y
+      break
+    end
+  end
 
   local count = game.deck:remaining()
   local maxVisible = 24 -- at most in the stockpile drawn
@@ -155,6 +162,15 @@ end
 
 function love.mousepressed(x, y, button)
   if button == 1 then
+    -- Check for click on deck pile
+    for _, pile in ipairs(game.piles) do
+      if pile.type == "deck" and pointInRect(x, y, pile.position.x, pile.position.y, 80, 120) then
+        drawThreeToDrawPile()
+        return
+      end
+    end
+
+    -- Otherwise, try to grab a card
     game.grabber:beginDrag(x, y, game.piles)
   end
 end
@@ -164,3 +180,33 @@ function love.mousereleased(x, y, button)
     game.grabber:endDrag(x, y, game.piles)
   end
 end
+
+function pointInRect(px, py, x, y, w, h)
+  return px >= x and px <= x + w and py >= y and py <= y + h
+end
+
+-- Called when player clicks the deck pile
+function drawThreeToDrawPile()
+  local drawPile = nil
+  for _, pile in ipairs(game.piles) do
+    if pile.type == "draw" then
+      drawPile = pile
+      break
+    end
+  end
+  if not drawPile then return end
+
+  for i = 1, 3 do
+    local cardData = game.deck:deal()
+    if cardData then
+      local card = CardClass:new(0, 0, cardData.suit, cardData.rank)
+      card.faceUp = true
+      card.sourcePile = drawPile -- crucial for drag/drop later
+      drawPile:addCard(card)
+    end
+  end
+
+  drawPile:updateVisibleFan()
+end
+
+

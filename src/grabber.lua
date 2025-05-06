@@ -33,19 +33,19 @@ end
 --  Calls from love.mousepressed in main.lua
 ------------------------------------------------------------------------
 function GrabberClass:beginDrag(x, y, piles)
-  if self.heldObject then return end
-
-  -- search each pile for a card
   for _, pile in ipairs(piles) do
-    local card = pile:findTopCardAt(x, y)
-    if card then
-      self.heldObject = card
-      card.state = CARD_STATE.GRABBED
-      self.grabOffset = Vector(x, y) - card.position
-      break
+    -- Only grab the top card of any pile
+    local topCard = pile.cards[#pile.cards]
+    if topCard and topCard.faceUp and topCard:containsPoint(x, y) then
+      self.heldObject = topCard
+      self.grabPos = Vector(x, y)
+      topCard.state = CARD_STATE.GRABBED
+      topCard.sourcePile = pile -- Track where it came from
+      return
     end
   end
 end
+
 
 
 ------------------------------------------------------------------------
@@ -56,41 +56,44 @@ function GrabberClass:endDrag(x, y, piles)
   if not self.heldObject then return end
 
   local card = self.heldObject
-
-  -- Find nearest pile
-  local closestPile = nil
+  local fromPile = card.sourcePile
+  local targetPile = nil
   local closestDist = math.huge
 
+  -- Find nearest pile
   for _, pile in ipairs(piles) do
     local dist = math.sqrt((pile.position.x - x)^2 + (pile.position.y - y)^2)
     if dist < closestDist then
       closestDist = dist
-      closestPile = pile
+      targetPile = pile
     end
   end
 
-  -- Move card to closest pile
-  if closestPile then
-    -- Remove from old pile
-    if card.currentPile then
-      card.currentPile:removeCard(card)
-      card.currentPile:flipTopCard()
+  local success = false
+  if targetPile and targetPile:canAcceptCard(card) then
+    if fromPile then
+      fromPile:removeCard(card) -- remove it
     end
 
-    -- Add to new pile
-    closestPile:addCard(card)
+    targetPile:addCard(card)
+    success = true
+  end
 
-    -- Snap to new pile's visual stack position
-    card.position = Vector(
-      closestPile.position.x,
-      closestPile.position.y + (#closestPile.cards - 1) * 20
-    )
+  if not success and fromPile then
+    -- Snap back
+    card.position.x = fromPile.position.x
+    card.position.y = fromPile.position.y
+  end
+
+  -- Re-fan draw pile if needed
+  if fromPile and fromPile.type == "draw" then
+    fromPile:updateVisibleFan()
   end
 
   card.state = CARD_STATE.IDLE
   self.heldObject = nil
-  self.grabPos = nil
 end
+
 
 
 ------------------------------------------------------------------------

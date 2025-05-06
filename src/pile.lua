@@ -51,18 +51,18 @@ end
 -- Draw all cards in the pile
 ------------------------------------------------------------
 function PileClass:draw()
-  -- draw dark blue outline slightly bigger than the card
-  local outlinePadding = 4 -- 4 pixel bold thickness
+  -- Draw the outline
+  local outlinePadding = 4
   local outlineX = self.position.x - outlinePadding
   local outlineY = self.position.y - outlinePadding
   local outlineW = 80 + outlinePadding * 2
   local outlineH = 120 + outlinePadding * 2
 
-  love.graphics.setColor(0.1, 0.1, 0.6, 1) -- dark blue
+  love.graphics.setColor(0.1, 0.1, 0.6, 1)
   love.graphics.setLineWidth(2)
   love.graphics.rectangle("line", outlineX, outlineY, outlineW, outlineH, 8, 8)
 
-  -- Draw pile type label centered above the pile
+  -- Draw label
   local label = self.type or "pile"
   local font = love.graphics.getFont()
   local textWidth = font:getWidth(label)
@@ -70,15 +70,25 @@ function PileClass:draw()
   love.graphics.setColor(1, 1, 1, 0.6)
   love.graphics.print(
     label,
-    self.position.x + 40 - textWidth / 2, -- center text
-    self.position.y - 20 -- above pile
+    self.position.x + 40 - textWidth / 2,
+    self.position.y - 20
   )
 
+  -- Draw only top 3 cards for draw pile, all for other piles
+  if self.type == "draw" then
+    local count = #self.cards
+    local firstVisible = math.max(count - 2, 1)
 
-  for _, card in ipairs(self.cards) do
-    card:draw()
+    for i = firstVisible, count do
+      self.cards[i]:draw()
+    end
+  else
+    for _, card in ipairs(self.cards) do
+      card:draw()
+    end
   end
 end
+
 
 ------------------------------------------------------------
 -- Find the topmost card under a given (x, y) point
@@ -90,4 +100,29 @@ function PileClass:findTopCardAt(x, y)
     end
   end
   return nil
+end
+
+------------------------------------------------------------
+-- update waste pile fanning downward
+------------------------------------------------------------
+function PileClass:updateVisibleFan()
+  if self.type ~= "draw" then return end
+
+  local count = #self.cards
+  local firstVisible = math.max(count - 2, 1)
+
+  for i = firstVisible, count do
+    local card = self.cards[i]
+    local yOffset = (i - firstVisible) * 20
+    card.position.x = self.position.x
+    card.position.y = self.position.y + yOffset
+  end
+end
+
+------------------------------------------------------------
+-- Valid movement validator
+------------------------------------------------------------
+function PileClass:canAcceptCard(card)
+  -- project 1: allow only tableau or foundation piles
+  return self.type == "tableau" or self.type == "foundation"
 end

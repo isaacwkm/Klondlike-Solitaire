@@ -24,14 +24,14 @@ end
 
 
 ------------------------------------------------------------
---  Per-frame update (placeholder for flips / animations)
+--  Per-frame update (animations tbd, nothing for now)
 ------------------------------------------------------------
 function CardClass:update(dt) end
 
 ------------------------------------------------------------
 --  Rendering
 ------------------------------------------------------------
-function CardClass:draw()
+function CardClass:draw(overrideX, overrideY)
   local key = self.suit .. "_" .. self.rank
   local img = game.cardSprites[key]
 
@@ -52,15 +52,17 @@ function CardClass:draw()
     local scaleX = desiredWidth / actualWidth
     local scaleY = desiredHeight / actualHeight
 
-    -- Draw scaled
-    love.graphics.draw(img, self.position.x, self.position.y, 0, scaleX, scaleY)
-  else
+    -- Use override position if provided, else use self.position
+    local x = overrideX or self.position.x
+    local y = overrideY or self.position.y
 
-    -- fallback
+    love.graphics.draw(img, x, y, 0, scaleX, scaleY)
+  else
     love.graphics.setColor(1, 0, 0, 1)
     love.graphics.rectangle("fill", self.position.x, self.position.y, self.size.x, self.size.y)
   end
 end
+
 
 ------------------------------------------------------------
 --  AABB test
