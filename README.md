@@ -5,6 +5,24 @@ Assets used:
 
 https://moxica.itch.io/casino-playing-cards
 
+PROGRAMMING PATTERNS USED:
+
+1. State Pattern
+For card behavior (idle, grabbed, etc.), found in card.lua. Allows clean handling of drag-and-drop logic and decouples behavior from card structure.
+
+2. Factory Pattern
+For card creation and deck generation, in card.lua and deck.lua respectively. Centralizes the creation logic.
+
+3. Flyweight Pattern
+Used in deck.lua by sharing card back texture for all cards (if implemented via a manager or single instance). Slightly improves memory usage and performance.
+
+4. Singleton Pattern
+A single table a globally accessible variables in main.lua. Makes commonly used variables convenient to access.
+
+5. Composite Pattern
+A pile is made up of individual cards, but you can interact with the pile as one entity (check top card, draw group)
+
+
 
 Things I think I did well:
 
