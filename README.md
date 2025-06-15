@@ -1,6 +1,31 @@
 # Klondlike Solitaire
  cmpm 121
 
+Review on 5/5/25:
+Review by: Jaren Kawai
+
+Your code is very organized, and the overall readability of all your files is really good. The way you consistently formatted your code also helped me understand what everything was doing. I also like the use of the grabber class and a pile class to further encapsulate your code to prevent larger functions in other files. That is something that I personally wanted to do, but probably won’t be able to do before the deadline. 
+
+A couple things that I noticed that are not major suggestions, but there is a lot of work being done in main. If possible, try to limit the amount of work being carried out in main.lua, and if functionality can be moved to other files that is a good habit to have. Additionally, try to avoid string comparisons between cards. If suit and rank are strings, it can be very easy to run into bugs related to something like spelling. I was doing this at first too since it was easy to both make a new card object and load in the card picture file with the same string. However, after also receiving feedback regarding implementing more enums, I think my code is better now.
+
+Overall I think your code has been the most readable out of all the repositories I’ve had to review for this class, and although I think some of the functionality is missing, it won’t be difficult for you to add it without sacrificing readability. 
+
+
+Review on 5/7/25
+Review by: Hunter
+
+-code is clean and nicely decoupled
+-readability is very compressed, but well organized and consistent
+-only actual criticism is that the draw three could be decoupled, but I only
+  just decoupled my draw 3 function and it made me want to blow my brains  out
+
+
+
+Review on 5/7/25
+Review by: Marcus Ochoa
+
+Your code is clean and well commented. Logic is nicely compartmentalized so as to reduce repetitive code. One thing that stands out is the way card data is managed. Currently suits and ranks are stored as strings (deck.lua:4) and the card accesses its own sprite from a table with a combination of the two strings as a key (card.lua:35). Consider having the card class hold a reference to its sprite instead of having to perform a lookup, this is more intuitive since each card always has a sprite and removes a lookup operation. If you would rather keep sprites decoupled for flexibility, consider changing the sprite table to a nested table of ranks under suits and changing the rank and suit string values to integers or enums. This may require extra work in the front end assigning sprites without clear strings, but the data will be more robust and easier to work with especially once you implement placement validation. Another thing that stands out is the amount of game logic present in the main file. Particularly logic relating to the deck pile (main.lua:189) can perhaps be relocated to a deck pile class or another class handling deck logic that can reference the deck and draw piles (this is what I did). Another thing you can do in this regard is make a button class to handle the logic of clicking the deck (I also did this). A button class allows you to decouple some of the behavior and use that behavior for future buttons you might want such as a reset button.
+
 Assets used:
 
 https://moxica.itch.io/casino-playing-cards
