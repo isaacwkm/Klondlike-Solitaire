@@ -89,7 +89,6 @@ function PileClass:draw()
   end
 end
 
-
 ------------------------------------------------------------
 -- Find the topmost card under a given (x, y) point
 ------------------------------------------------------------
@@ -97,6 +96,23 @@ function PileClass:findTopCardAt(x, y)
   for i = #self.cards, 1, -1 do
     if self.cards[i]:containsPoint(x, y) then
       return self.cards[i]
+    end
+  end
+  return nil
+end
+
+------------------------------------------------------------
+-- Find the stack under a given (x, y) point
+------------------------------------------------------------
+function PileClass:getCardStackAt(x, y)
+  for i = #self.cards, 1, -1 do
+    local card = self.cards[i]
+    if card.faceUp and card:containsPoint(x, y) then
+      local stack = {}
+      for j = i, #self.cards do
+        table.insert(stack, self.cards[j])
+      end
+      return stack
     end
   end
   return nil
@@ -123,6 +139,38 @@ end
 -- Valid movement validator
 ------------------------------------------------------------
 function PileClass:canAcceptCard(card)
-  -- project 1: allow only tableau or foundation piles
-  return self.type == "tableau" or self.type == "foundation"
+  if self.type == "tableau" then
+    local topCard = self.cards[#self.cards]
+
+    if not topCard then
+      return card.rankValue == 13 -- Only Kings on empty tableau
+    end
+
+    return card:hasOppositeColor(topCard) and card.rankValue == topCard.rankValue - 1
+  end
+
+  if self.type == "foundation" then
+    local topCard = self.cards[#self.cards]
+
+    if not topCard then
+      return card.rankValue == 1 -- Only Aces on empty foundation
+    end
+
+    return card.suit == topCard.suit and card.rankValue == topCard.rankValue + 1
+  end
+
+  return false
+end
+
+------------------------------------------------------------
+-- Card flipping logic
+------------------------------------------------------------
+
+function PileClass:flipTopCardIfNeeded()
+  if self.type == "tableau" then
+    local top = self.cards[#self.cards]
+    if top and not top.faceUp then
+      top.faceUp = true
+    end
+  end
 end

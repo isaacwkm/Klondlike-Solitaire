@@ -4,24 +4,69 @@ require "vector"
 CardClass = {}
 
 CARD_STATE = {
-  IDLE        = 0,
-  HOVER       = 1,
-  GRABBED     = 2
+  IDLE    = 0,
+  HOVER   = 1,
+  GRABBED = 2
 }
 
 function CardClass:new(xPos, yPos, suit, rank)
+  local map = {
+    ["ace"] = 1,
+    ["a"] = 1,
+    ["2"] = 2,
+    ["3"] = 3,
+    ["4"] = 4,
+    ["5"] = 5,
+    ["6"] = 6,
+    ["7"] = 7,
+    ["8"] = 8,
+    ["9"] = 9,
+    ["10"] = 10,
+    ["jack"] = 11,
+    ["j"] = 11,
+    ["queen"] = 12,
+    ["q"] = 12,
+    ["king"] = 13,
+    ["k"] = 13
+  }
+
+  local normalized = tostring(rank):lower():gsub("^0+", "")
+  local value = map[normalized]
+
+  if not value then
+    error("Invalid rank: " .. tostring(rank))
+  end
+
   local card = {
     position = Vector(xPos, yPos),
-    size     = Vector(50, 70),
-    state    = CARD_STATE.IDLE,
-    suit     = suit,
-    rank     = rank,
-    faceUp   = true,
-    currentPile = nil
+    rank = rank,       -- unchanged, "jack" or "10" or whatever
+    rankValue = value, -- 11, 10, etc
+    suit = suit,
+    faceUp = true,
+    currentPile = nil,
+    originalPosition = nil,
+    size = Vector(50, 70),
+    state = CARD_STATE.IDLE
   }
+
   return setmetatable(card, { __index = CardClass })
 end
 
+------------------------------------------------------------
+--  Color interpretation
+------------------------------------------------------------
+
+function CardClass:isRed()
+  return self.suit == "hearts" or self.suit == "diamonds"
+end
+
+function CardClass:isBlack()
+  return self.suit == "spades" or self.suit == "clubs"
+end
+
+function CardClass:hasOppositeColor(otherCard)
+  return (self:isRed() and otherCard:isBlack()) or (self:isBlack() and otherCard:isRed())
+end
 
 ------------------------------------------------------------
 --  Per-frame update (animations tbd, nothing for now)
@@ -63,7 +108,6 @@ function CardClass:draw(overrideX, overrideY)
   end
 end
 
-
 ------------------------------------------------------------
 --  AABB test
 ------------------------------------------------------------
@@ -76,15 +120,14 @@ function CardClass:containsPoint(px, py)
   local height = img:getHeight() * scaleY
 
   return
-    px > self.position.x and
-    px < self.position.x + width and
-    py > self.position.y and
-    py < self.position.y + height
+      px > self.position.x and
+      px < self.position.x + width and
+      py > self.position.y and
+      py < self.position.y + height
 end
 
-
 ------------------------------------------------------------
---  Called each frame from main.lua 
+--  Called each frame from main.lua
 ------------------------------------------------------------
 function CardClass:updateHoverState(mouseX, mouseY, isDragging)
   if self.state == CARD_STATE.GRABBED then return end

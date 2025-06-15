@@ -38,3 +38,11 @@ end
 function DeckClass:remaining()
   return #self.cards
 end
+
+function DeckClass:isEmpty()
+  return #self.cards == 0
+end
+
+function DeckClass:insertTop(cardData)
+  table.insert(self.cards, 1, cardData)
+end

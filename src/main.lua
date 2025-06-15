@@ -21,7 +21,8 @@ game = {
     Vector(500, 200),
   },
   cardSprites = {},
-  stockPilePosition = Vector(10, 40)
+  stockPilePosition = Vector(10, 40),
+  phase = "playing", -- "playing", "gameover"
 }
 
 local suits = { "clubs", "diamonds", "hearts", "spades" }
@@ -30,6 +31,41 @@ local ranks = { "02", "03", "04", "05", "06", "07", "08", "09", "10", "jack", "q
 -- ---------------------------------------------------------------------------
 --  utility
 -- ---------------------------------------------------------------------------
+
+function checkWinCondition(piles)
+  local completeCount = 0
+
+  for _, pile in ipairs(piles) do
+    if pile.type == "foundation" and #pile.cards == 13 then
+      completeCount = completeCount + 1
+    end
+  end
+
+  if completeCount == 4 then
+    game.phase = "gameover"
+    print("YOU WIN!")
+  end
+end
+
+function drawVictoryScreen()
+  love.graphics.setColor(1, 1, 1, 1)
+
+  local font = love.graphics.newFont(48)
+  love.graphics.setFont(font)
+
+  local message = "YOU WIN"
+  local textWidth = font:getWidth(message)
+  local textHeight = font:getHeight()
+
+  local screenWidth = love.graphics.getWidth()
+  local screenHeight = love.graphics.getHeight()
+
+  love.graphics.print(
+    message,
+    (screenWidth - textWidth) / 2,
+    (screenHeight - textHeight) / 2
+  )
+end
 
 -- Draw the stockpile cards left
 local function drawStockPile()
@@ -67,7 +103,7 @@ end
 --  LOVE callbacks
 -- ---------------------------------------------------------------------------
 function love.load()
-  love.window.setMode(1040, 720)
+  love.window.setMode(1440, 720)
   love.graphics.setBackgroundColor(0, 0.7, 0.2, 1)
 
   -- Initialize components
@@ -96,14 +132,14 @@ function love.load()
   local tableauStartX = 150
   for i = 1, 7 do
     local x = tableauStartX + (i - 1) * spacing
-    table.insert(game.piles, PileClass:new(x, 300, "tableau"))
+    table.insert(game.piles, PileClass:new(x, 400, "tableau"))
   end
 
   -- 4 Foundation
-  local foundationStartX = 600
+  local foundationStartX = 900
   for i = 1, 4 do
     local x = foundationStartX + (i - 1) * spacing
-    table.insert(game.piles, PileClass:new(x, 100, "foundation"))
+    table.insert(game.piles, PileClass:new(x, 50, "foundation"))
   end
 
   -- Deal 1–7 cards into the 7 tableau piles
@@ -158,6 +194,10 @@ function love.draw()
   love.graphics.setColor(1, 1, 1, 1)
   local mx, my = game.grabber.currentMousePos.x, game.grabber.currentMousePos.y
   love.graphics.print(("Mouse: %.0f, %.0f"):format(mx, my), 10, 10)
+
+  if game.phase == "gameover" then
+    drawVictoryScreen()
+  end
 end
 
 function love.mousepressed(x, y, button)
@@ -185,7 +225,6 @@ function pointInRect(px, py, x, y, w, h)
   return px >= x and px <= x + w and py >= y and py <= y + h
 end
 
--- Called when player clicks the deck pile
 function drawThreeToDrawPile()
   local drawPile = nil
   for _, pile in ipairs(game.piles) do
@@ -196,12 +235,18 @@ function drawThreeToDrawPile()
   end
   if not drawPile then return end
 
+  -- Check if deck is empty
+  if game.deck:isEmpty() then
+    reshuffleDrawPileIntoDeck(drawPile)
+  end
+
+  -- Draw up to 3 cards
   for i = 1, 3 do
     local cardData = game.deck:deal()
     if cardData then
       local card = CardClass:new(0, 0, cardData.suit, cardData.rank)
       card.faceUp = true
-      card.sourcePile = drawPile -- crucial for drag/drop later
+      card.sourcePile = drawPile
       drawPile:addCard(card)
     end
   end
@@ -209,4 +254,13 @@ function drawThreeToDrawPile()
   drawPile:updateVisibleFan()
 end
 
+function reshuffleDrawPileIntoDeck(drawPile)
+  -- Pull cards from draw pile back into the deck
+  for i = #drawPile.cards, 1, -1 do
+    local card = drawPile.cards[i]
+    table.remove(drawPile.cards, i)
 
+    card.faceUp = false
+    game.deck:insertTop({suit = card.suit, rank = card.rank})
+  end
+end
